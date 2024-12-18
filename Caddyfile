@@ -1,3 +1,6 @@
-http://43.205.128.209 {
+www.theankit.in {
+    redir https://theankit.in{uri}
+}
+theankit.in {
     reverse_proxy localhost:8000
 }
