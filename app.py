@@ -31,3 +31,7 @@ def health():
 def message_1():
     return render_template('shalu.html')
 
+@app.route('/callback')
+def push_notification_webhook():
+    print('API Called')
+    return {}
