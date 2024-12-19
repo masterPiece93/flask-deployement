@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
@@ -31,7 +31,10 @@ def health():
 def message_1():
     return render_template('shalu.html')
 
-@app.route('/callback')
+@app.route('/callback', methods=['POST'])
 def push_notification_webhook():
+    print('-'*15)
     print('API Called')
+    print(request.headers)
+    print('-'*15)
     return {}
