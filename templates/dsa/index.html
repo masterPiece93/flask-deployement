@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Algorithm Runner</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1>Graph Algorithm Runner</h1>
+    </header>
+    <main>
+        <section id="controls">
+            <button id="add-node">Add Node</button>
+            <button id="add-edge">Add Edge</button>
+            <button id="run-algorithm">Run Algorithm</button>
+            <select id="algorithm-selector">
+                <option value="bfs">Breadth-First Search (BFS)</option>
+                <option value="dfs">Depth-First Search (DFS)</option>
+                <option value="dijkstra">Dijkstra's Algorithm</option>
+                <option value="bellman-ford">Bellman-Ford Algorithm</option>
+                <option value="prims">Prim's Algorithm</option>
+                <option value="kruskal">Kruskal's Algorithm</option>
+            </select>
+            <input type="text" id="source-node" placeholder="Source Node">
+        </section>
+        <section id="graph-container">
+            <div id="graph"></div>
+        </section>
+        <section id="output">
+            <h2>Output</h2>
+            <pre id="output-log"></pre>
+        </section>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.23.0/cytoscape.min.js"></script>
+    <script src="/static/script.js"></script>
+</body>
+</html>
