@@ -1,11 +1,25 @@
+import os
 import datetime
 import logging
-from flask import Flask, render_template, request, jsonify
+import redis
+import utilities
+import exceptions as AppCustomExceptions
+from flask import Flask, render_template, request, jsonify, session
+from flask_session import Session
+from src.dsa.routes import dsa_bp
+from src.misc.routes import misc_bp
+from src.auth.google.routes import auth_bp
+
 from json import JSONEncoder
+# logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
+logger = logging.getLogger(__name__)
+logger.level = logging.DEBUG
 
+# app
 app = Flask(__name__)
+app.config.from_object('setup.config.Config')
 
-DEBUG=True
 class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, set):
@@ -16,31 +30,24 @@ class CustomJSONEncoder(JSONEncoder):
 # Assign the custom encoder to the app
 app.json_encoder = CustomJSONEncoder
 
+# credentials key value
+app.config["CREDENTIALS_SESSION_KEY"] = utilities.CredentialsKey()
+
+# redis configuration
+redis_connection = redis.from_url(app.config["REDIS_CONN_STRING"])
+utilities.check_redis_connection(
+    redis_connection, 
+    on_exception_raise=AppCustomExceptions.RedisConnectionFailed,
+    logger=logger
+)
+app.config['SESSION_TYPE'] = 'redis'
+app.config['SESSION_REDIS'] = redis_connection
+Session(app)
+
+# Routes
 @app.route('/')
 def home():
-    return """
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <h1 style="
-        text-align: center;
-        background: #000000;
-        color: #FFD700;
-        border: 0.1em solid gold;
-        "
-    >
-    THE ANKIT </h1>
-
-    <div style="text-align: center;">
-    <a href="/ankit-loves-shalu">
-    <i class="fa fa-heart" style="font-size:48px;color:red">
-    </i>
-    </a>
-    </div>
-    <ul>
-        <li>
-            <a href="/dsa/"> dsa </a>
-        </li>
-    </ul>
-    """
+    return render_template('index.html')
 
 @app.route('/health')
 def health():
@@ -58,82 +65,56 @@ def push_notification_webhook():
     print('-'*15)
     return {}
 
-# ---------
-# DS & Algo
-# ---------
-from dsa.python.graphs.traversal.bfs import bfs
-from dsa.python.graphs.traversal.dfs import dfs
-from dsa.python.graphs.shortest_path.dijkstra import path as dijkstra
-from dsa.python.graphs.shortest_path.bellman_ford import path as bellman_ford
-from dsa.python.graphs.minimum_spanning_tree.prims import span as prims
-from dsa.python.graphs.minimum_spanning_tree.kruskal import span as kruskal
-from pprint import pprint
-
-def translate(ui_graph_data):
-    graph = {}
-    for k, v in ui_graph_data.items():
-        vertex_id = int(k.replace('n', ''))
-        if vertex_id not in graph:
-            graph[vertex_id] = set()
-        for edge_info in v:
-            target_vertex_id = int(edge_info['target'].replace('n', ''))
-            if 'weight' not in edge_info or not edge_info['weight']:
-                graph[vertex_id].add(target_vertex_id)
-            else:
-                graph[vertex_id].add((target_vertex_id, int(edge_info['weight'])))
-    return graph
-
-dsa_route: callable = lambda r: '/dsa' + r
-
-@app.route(dsa_route('/'))
-def index():
-    return render_template('dsa/index.html')
-
-@app.route(dsa_route('/run-algorithm'), methods=['POST'])
-def run_algorithm():
-    data = request.json
-    graph_data = data.get('graph')
-    print("Graph Structure ( UI )  :")
-    pprint(graph_data, indent=4)
-    graph = translate(graph_data)
-    print("Graph Structure ( Formulated ) :")
-    pprint(graph, indent=4)
-    algorithm = data.get('algorithm')
-    source = data.get('source')
-    if source:
-        source = int(source.replace('n', ''))
-    else:
-        raise Exception('source not provided')
-    try:
-        if algorithm == 'bfs':
-            result = bfs(graph, source)
-        elif algorithm == 'dfs':
-            result = dfs(graph, source)
-        elif algorithm == 'dijkstra':
-            result = dijkstra(graph, source)
-        elif algorithm == 'bellman-ford':
-            result = bellman_ford(graph, source)
-        elif algorithm == 'prims':
-            result, cost = prims(graph, source)
-            result = {'tree': result, 'cost': cost}
-            return jsonify({'result': result['cost']})
-        elif algorithm == 'kruskal':
-            result, cost = kruskal(graph)
-            result = {'tree': result, 'cost': cost}
-            return jsonify({'result': result['cost']})
-        else:
-            return jsonify({'error': 'Invalid algorithm selected'}), 400
-
-        return jsonify({'result': result})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-if __name__ != '__main__':
-    # Get the gunicorn error logger
-    gunicorn_logger = logging.getLogger('gunicorn.error')
-    # Assign gunicorn's handlers and level to your app's logger
-    app.logger.handlers = gunicorn_logger.handlers
-    app.logger.setLevel(gunicorn_logger.level)
+@app.route('/api/auth/status', methods=['GET'])
+def api_auth_status():
+    """
+    API endpoint to check authentication status and retrieve user information.
     
+    Returns JSON with:
+    - authenticated: boolean indicating if user is logged in
+    - name: user's full name (if authenticated)
+    - email: user's email (if authenticated)
+    - profile_picture: user's profile picture URL (if authenticated and available)
+    """
+    
+    # Check if user is authenticated
+    is_authenticated = utilities.is_authenticated()
+    
+    response = {
+        'authenticated': is_authenticated
+    }
+    
+    if is_authenticated:
+        # Get user info from session
+        id_info = session.get('id_info', {})
+        
+        # Extract user information
+        response['name'] = id_info.get('name', 'User')
+        response['email'] = id_info.get('email', '')
+        
+        # Get profile picture from Google
+        profile_picture = id_info.get('picture', None)
+        response['profile_picture'] = profile_picture
+    
+    return jsonify(response)
+
+# Route Registration
+app.register_blueprint(dsa_bp, url_prefix='/dsa')
+app.register_blueprint(auth_bp, url_prefix='/auth')
+
+# Register misc route only in debug mode
+if app.debug:
+    app.register_blueprint(misc_bp, url_prefix='/misc')
+
+
+# if __name__ != '__main__':
+#     # Get the gunicorn error logger
+#     gunicorn_logger = logging.getLogger('gunicorn.error')
+#     # Assign gunicorn's handlers and level to your app's logger
+#     app.logger.handlers = gunicorn_logger.handlers
+#     app.logger.setLevel(gunicorn_logger.level)
+
 if __name__ == '__main__':
-    app.run(debug=True)
+
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = {True: '1', False: '0'}[app.config['GOOGLE_INSECURE_MODE']]
+    app.run(host='0.0.0.0', port=app.config["PORT"])

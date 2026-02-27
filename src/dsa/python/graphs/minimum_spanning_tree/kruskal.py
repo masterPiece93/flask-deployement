@@ -94,7 +94,7 @@ graph_data
 """
 
 from typing import *
-from dsa.python.graphs.ds import DisjointSet
+from src.dsa.python.graphs.ds import DisjointSet
 
 # Custom Types
 

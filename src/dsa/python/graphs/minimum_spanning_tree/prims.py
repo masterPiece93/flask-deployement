@@ -116,7 +116,7 @@ GRAPH_REPRESENTATION = """
 # Imports
 from typing import *
 from dataclasses import dataclass
-from dsa.python.graphs.ds import PriorityQueue
+from src.dsa.python.graphs.ds import PriorityQueue
 import uuid
 
 # Custom Types

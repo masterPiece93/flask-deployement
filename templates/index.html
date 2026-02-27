@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>The Ankit</title>
+    <style>
+        /* Navigation Bar Styles */
+        nav.navbar {
+            background-color: #000000;
+            padding: 1em 2em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 1.5em;
+            text-decoration: none;
+        }
+
+        .navbar-menu {
+            display: flex;
+            gap: 2em;
+            align-items: center;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar-link {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-size: 1em;
+        }
+
+        .navbar-link:hover {
+            color: #FFD700;
+        }
+
+        .navbar-auth {
+            display: flex;
+            gap: 1.5em;
+            align-items: center;
+        }
+
+        .auth-button {
+            padding: 0.6em 1.2em;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            font-size: 1em;
+        }
+
+        .login-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .login-button:hover {
+            background-color: #45a049;
+        }
+
+        .logout-button {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .logout-button:hover {
+            background-color: #da190b;
+        }
+
+        .profile-container {
+            display: flex;
+            align-items: center;
+            gap: 0.8em;
+            cursor: pointer;
+        }
+
+        .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #FFD700;
+            transition: transform 0.3s ease;
+        }
+
+        .profile-pic:hover {
+            transform: scale(1.1);
+        }
+
+        .user-name {
+            color: white;
+            font-size: 0.9em;
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: #444;
+            min-width: 200px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            padding: 0.5em 0;
+            border-radius: 4px;
+            margin-top: 0.5em;
+            z-index: 1;
+        }
+
+        .dropdown-menu a {
+            color: white;
+            padding: 0.75em 1.2em;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s ease;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #555;
+        }
+
+        .dropdown-menu.hidden {
+            display: none;
+        }
+
+        .profile-section {
+            position: relative;
+        }
+
+        .auth-hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="/ankit-loves-shalu" class="navbar-brand">
+            <i class="fa fa-heart" style="color: red;"></i> THE ANKIT
+            <span style="color: wheat;font-style: italic;
+    font-weight: normal;">Journal</span>
+        </a>
+        
+        <div class="navbar-auth">
+            <!-- Login Button (shown when not authenticated) -->
+            <a id="loginBtn" href="/auth/login" class="auth-button login-button auth-hidden">
+                <i class="fa fa-sign-in"></i> Login with Google
+            </a>
+
+            <!-- Profile Section (shown when authenticated) -->
+            <div id="profileSection" class="profile-section auth-hidden">
+                <div class="profile-container" onclick="toggleProfileMenu()">
+                    <img id="profilePic" src="" alt="Profile" class="profile-pic">
+                    <span id="userName" class="user-name"></span>
+                    <i class="fa fa-chevron-down" style="color: white; font-size: 0.8em;"></i>
+                </div>
+                
+                <!-- Profile Dropdown Menu -->
+                <div id="dropdownMenu" class="dropdown-menu hidden">
+                    <a href="#" id="profileLink">
+                        <i class="fa fa-user"></i> Profile
+                    </a>
+                    <a href="/auth/logout" id="logoutLink">
+                        <i class="fa fa-sign-out"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+
+    <!-- <div style="text-align: center; margin-top: 2em;">
+        <h1 style="
+            background: #000000;
+            color: #FFD700;
+            border: 0.1em solid gold;
+            padding: 1em;
+        ">
+        THE ANKIT 
+        </h1>
+    </div> -->
+
+    <ul style="margin-top: 2em; text-align: left;">
+        <li>
+            <a href="/dsa/">DSA</a>
+        </li>
+    </ul>
+
+    <script>
+        // Authentication state management
+        function initializeNavigation() {
+            fetch('/api/auth/status')
+                .then(response => response.json())
+                .then(data => {
+                    const isAuthenticated = data.authenticated;
+                    const loginBtn = document.getElementById('loginBtn');
+                    const profileSection = document.getElementById('profileSection');
+                    
+                    if (isAuthenticated) {
+                        loginBtn.classList.add('auth-hidden');
+                        profileSection.classList.remove('auth-hidden');
+                        
+                        // Set profile picture
+                        const profilePic = document.getElementById('profilePic');
+                        const defaultProfilePic = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23999"%3E%3Ccircle cx="12" cy="8" r="4"/%3E%3Cpath d="M12 14c-6 0-8 3-8 5v3h16v-3c0-2-2-5-8-5z"/%3E%3C/svg%3E';
+                        
+                        if (data.profile_picture) {
+                            profilePic.src = data.profile_picture;
+                        } else {
+                            profilePic.src = defaultProfilePic;
+                        }
+                        
+                        // Set user name
+                        const userName = document.getElementById('userName');
+                        userName.textContent = data.name || 'User';
+                    } else {
+                        loginBtn.classList.remove('auth-hidden');
+                        profileSection.classList.add('auth-hidden');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching auth status:', error);
+                    // Default to showing login button on error
+                    document.getElementById('loginBtn').classList.remove('auth-hidden');
+                    document.getElementById('profileSection').classList.add('auth-hidden');
+                });
+        }
+
+        // Toggle profile dropdown menu
+        function toggleProfileMenu() {
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            dropdownMenu.classList.toggle('hidden');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const profileSection = document.getElementById('profileSection');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            
+            if (!profileSection.contains(event.target)) {
+                dropdownMenu.classList.add('hidden');
+            }
+        });
+
+        // Initialize navigation on page load
+        document.addEventListener('DOMContentLoaded', initializeNavigation);
+    </script>
+</body>
+</html>
