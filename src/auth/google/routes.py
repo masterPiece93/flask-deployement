@@ -53,7 +53,8 @@ def final_redirect_uri() -> str:
         port: int = current_app.config["PORT"]
         return f"http://localhost:{port}" + "/"
     
-    return absolute_url_for("auth.logged_in") # TODO: fetch it from env
+    # return absolute_url_for("auth.logged_in") # TODO: fetch it from env
+    return url_for('home')
 
 def credentials_to_dict(credentials):
     return {'token': credentials.token,
