@@ -50,3 +50,32 @@ sudo apt install python3-pip python3-dev build-essential libssl-dev libffi-dev p
 ```sh
 sudo apt install python3-venv
 ```
+
+### Caddy Debugging
+
+Check Caddy Service :
+```sh
+ps aux | grep caddy
+```
+
+Kill Caddy service
+```sh
+sudo killall caddy
+```
+
+Check the Caddy Logs for Specific Errors: 
+_The systemd status command often truncates logs. Use journalctl to see the full output and identify the specific error message Caddy encountered during startup._
+```sh
+journalctl -u caddy.service --no-pager | less +G
+```
+
+Reload systemd and restart the service:
+```sh
+sudo systemctl daemon-reload
+sudo systemctl restart caddy.service
+```
+
+Syntax errors are the most common cause of failure. Run this command to check for errors in your configuration: 
+```sh
+caddy validate --config /path/to/Caddyfile
+```
