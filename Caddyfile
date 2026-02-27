@@ -1,6 +1,6 @@
 www.theankit.in {
-    redir https://theankit.in{uri}
+	redir https://theankit.in{uri}
 }
 theankit.in {
-    reverse_proxy localhost:8000
+	reverse_proxy localhost:8000
 }
