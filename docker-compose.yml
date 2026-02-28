@@ -29,9 +29,11 @@ services:
     volumes:
       - ${CADDYFILE_PATH}:/etc/caddy/Caddyfile:ro # Mount the Caddyfile
       - caddy_data:/data # Volume for Caddy's state (e.g., certificates)
+      - caddy_config:/config
     ports:
       - "80:80" # Map host port 80 to Caddy's port 80
       - "443:443" # Uncomment to enable HTTPS on port 443
+      - "2019:2019"
     depends_on:
       - flask_app # Ensure the Flask app starts before Caddy
 
@@ -44,3 +46,10 @@ volumes:
       o: bind
       # Specify the absolute path on your host machine
       device: ${CADDY_DATA_STORAGE} # Use an absolute path (e.g., /home/user/mydata)
+  caddy_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      # Specify the absolute path on your host machine
+      device: ${CADDY_CONFIG_STORAGE} # Use an absolute path (e.g., /home/user/mydata)
