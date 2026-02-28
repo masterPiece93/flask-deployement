@@ -27,7 +27,7 @@ services:
     image: caddy:latest
     restart: unless-stopped
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro # Mount the Caddyfile
+      - ${CADDYFILE_PATH}:/etc/caddy/Caddyfile:ro # Mount the Caddyfile
       - caddy_data:/data # Volume for Caddy's state (e.g., certificates)
     ports:
       - "80:80" # Map host port 80 to Caddy's port 80

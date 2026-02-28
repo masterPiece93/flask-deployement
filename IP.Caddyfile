@@ -1,0 +1,8 @@
+# Caddy will automatically handle HTTPS for localhost,
+# but for local development, you might just use http://localhost
+# to avoid certificate issues in the browser.
+
+http://35.154.26.172 {
+    # Reverse proxy requests to the 'flask_app' service defined in docker-compose
+    reverse_proxy flask_app:8000
+}
