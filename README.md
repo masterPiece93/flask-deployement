@@ -79,3 +79,17 @@ Syntax errors are the most common cause of failure. Run this command to check fo
 ```sh
 caddy validate --config /path/to/Caddyfile
 ```
+
+```sh
+sudo lsof -i :2019
+```
+
+> Caddy runs on localhost:2019
+
+> Caddy can be run with both `systemctl` and `cli`, but not both, else there would be conflicts .
+
+> sudo caddy start --config ./Caddyfile --adaptor caddyfile
+
+```sh
+nohup gunicorn -c config.py > gunicorn.log 2>&1 &
+```
