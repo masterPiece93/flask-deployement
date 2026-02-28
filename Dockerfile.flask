@@ -1,0 +1,18 @@
+# Dockerfile.flask
+FROM python:3.12-slim
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the requirements file and install dependencies
+COPY requirements.txt .
+
+# Install dependencies, ensuring cleanup in the same layer to reduce image size
+RUN pip install --no-cache-dir -r requirements.txt && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy the rest of the application code
+COPY . .
+
+# Command to run the application with Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"]

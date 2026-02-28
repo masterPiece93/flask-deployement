@@ -1,0 +1,46 @@
+# docker-compose.yml
+version: '3.9'
+
+services:
+
+  redis:
+    image: "redis:latest" # Uses the official Redis image from Docker Hub
+    # restart: unless-stopped
+    ports:
+      - "6379:6379"
+  
+  flask_app:
+    build:
+      context: .
+      dockerfile: Dockerfile.flask
+    # restart: unless-stopped
+    env_file:
+      - ./.env
+    expose:
+      - "8000" # Expose port 8000 within the Docker network, not to the host machine
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+  
+  caddy:
+    image: caddy:latest
+    restart: unless-stopped
+    volumes:
+      - ./Caddyfile2:/etc/caddy/Caddyfile:ro # Mount the Caddyfile
+      - caddy_data:/data # Volume for Caddy's state (e.g., certificates)
+    ports:
+      - "80:80" # Map host port 80 to Caddy's port 80
+      - "443:443" # Uncomment to enable HTTPS on port 443
+    depends_on:
+      - flask_app # Ensure the Flask app starts before Caddy
+
+# Define named volume for Caddy data
+volumes:
+  caddy_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      # Specify the absolute path on your host machine
+      device: /home/ubuntu/Documents/personal/flask-deployement/caddy_data # Use an absolute path (e.g., /home/user/mydata)
