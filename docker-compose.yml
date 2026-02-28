@@ -27,7 +27,7 @@ services:
     image: caddy:latest
     restart: unless-stopped
     volumes:
-      - ./Caddyfile2:/etc/caddy/Caddyfile:ro # Mount the Caddyfile
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro # Mount the Caddyfile
       - caddy_data:/data # Volume for Caddy's state (e.g., certificates)
     ports:
       - "80:80" # Map host port 80 to Caddy's port 80
@@ -43,4 +43,4 @@ volumes:
       type: none
       o: bind
       # Specify the absolute path on your host machine
-      device: /home/ubuntu/Documents/personal/flask-deployement/caddy_data # Use an absolute path (e.g., /home/user/mydata)
+      device: ${CADDY_DATA_STORAGE} # Use an absolute path (e.g., /home/user/mydata)
