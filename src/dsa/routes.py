@@ -42,17 +42,18 @@ dsa_bp = Blueprint(
 
 @dsa_bp.route('/')
 def index():
-    if is_authenticated():
-        return render_template('dsa/index.html')
-    else:
-        return redirect(url_for('auth.login'))
+    # if is_authenticated():
+    #     return render_template('dsa/index.html')
+    # else:
+    #     return redirect(url_for('auth.login'))
     
+    return render_template('dsa/index.html')
 
 @dsa_bp.route('/run-algorithm', methods=['POST'])
 def run_algorithm():
-    if not is_authenticated():
-        flash('Please Authenticate', 'error')
-        return jsonify({'result': None})
+    # if not is_authenticated():
+    #     flash('Please Authenticate', 'error')
+    #     return jsonify({'result': None})
     
     data = request.json
     graph_data = data.get('graph')
