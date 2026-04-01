@@ -94,7 +94,7 @@ def login():
     session['state'] = state
     if "final_redirect" not in session or not session["final_redirect"]:
         session['final_redirect'] = final_redirect_uri() # directs where to land after login is successful.
-
+    print(f"{authorization_url=}")
     return redirect(authorization_url)
 
 @auth_bp.route('/signin-google', methods=['GET'])
@@ -103,7 +103,8 @@ def callback():
     session_state = session['state']
     redirect_uri = request.base_url
     #pull the authorization response
-    authorization_response = request.url  
+    authorization_response = request.url
+    print(f"{authorization_response=}")
     #create our flow object similar to our initial login with the added "state" information
     flow = Flow.from_client_config(
         client_config={

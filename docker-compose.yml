@@ -6,6 +6,11 @@ services:
   redis:
     image: "redis:latest" # Uses the official Redis image from Docker Hub
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"   # limit each log file to 10 MB
+        max-file: "3"     # keep a maximum of 3 rotated files
     ports:
       - "6379:6379"
     networks:
@@ -15,9 +20,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.flask
-    # restart: unless-stopped
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m" # limit each log file to 10 MB
+        max-file: "3"  # keep a maximum of 3 rotated files
     env_file:
       - ./.env
+    environment:
+      PYTHONUNBUFFERED: 1
     container_name: flask_app_container
     expose:
       - "8000" # Expose port 8000 within the Docker network, not to the host machine
@@ -32,8 +44,17 @@ services:
     image: nginx:latest
     restart: unless-stopped
     container_name: nginx_reverse_proxy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m" # limit each log file to 10 MB
+        max-file: "3"  # keep a maximum of 3 rotated files
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro # Mount the Nginx Configuration
+      # where certbot placed the initial tls cert, and where refreshed certs will be placed
+      - /etc/letsencrypt:/etc/letsencrypt:rw
+      # where certbot writes challenge files to when being challenged by a Let's Encrypt server
+      - /var/www/certbot:/var/www/certbot:ro
     ports:
       - "80:80" # Map host port 80 to Caddy's port 80
       - "443:443" # Uncomment to enable HTTPS on port 443

@@ -9,7 +9,7 @@ from flask_session import Session
 from src.dsa.routes import dsa_bp
 from src.misc.routes import misc_bp
 from src.auth.google.routes import auth_bp
-
+from werkzeug.middleware.proxy_fix import ProxyFix
 from json import JSONEncoder
 # logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
@@ -18,6 +18,10 @@ logger.level = logging.DEBUG
 
 # app
 app = Flask(__name__)
+# Apply the ProxyFix middleware
+app.wsgi_app = ProxyFix(
+    app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1
+)
 app.config.from_object('setup.config.Config')
 
 class CustomJSONEncoder(JSONEncoder):
